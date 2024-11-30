@@ -21,6 +21,7 @@ const createCategory: RequestHandler = async (req, res, next) => {
 const updateCategory: RequestHandler = async (req, res, next) => {
   const { name, description } = req.body;
   const { id } = req.params;
+
   try {
     const categoryExists = await CategoryModel.findByPk(id);
     if (!categoryExists) {
@@ -38,7 +39,7 @@ const updateCategory: RequestHandler = async (req, res, next) => {
     categoryExists.save();
 
     return createSuccess(res, {
-      message: "Tạo danh mục thành công",
+      message: "Cập nhật thành công",
       data: categoryExists.toJSON(),
     });
   } catch (error) {

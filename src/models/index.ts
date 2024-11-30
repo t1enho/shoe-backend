@@ -10,6 +10,10 @@ export { default as OrderModel } from "./order.model";
 export { default as ProductModel } from "./product.model";
 export { default as UserModel } from "./user.model";
 
+ProductModel.belongsTo(CategoryModel, {
+  foreignKey: "categoryId",
+});
+
 OrderModel.belongsTo(UserModel, {
   foreignKey: "customerId",
   as: "customer",

@@ -17,7 +17,5 @@ export const createSuccess = <T>(res: Response<T>, result: T) => {
     ...result,
   };
 
-  console.log(response);
-
   res.status(200).json(response);
 };

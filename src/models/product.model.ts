@@ -30,8 +30,12 @@ const ProductModel = connection.define(TABLE_NAMES.PRODUCTS, {
   },
   status: {
     type: DataTypes.ENUM({
-      values: ["out-of-stock", "stop-selling", "for-sale"],
+      values: ["OUT_OF_STOCK", "STOP_SELLING", "FOR_SALE"],
     }),
+    allowNull: true,
+  },
+  imageURL: {
+    type: DataTypes.TEXT("long"),
     allowNull: true,
   },
 });
