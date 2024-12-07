@@ -6,7 +6,7 @@ const productRoute = Router();
 
 productRoute.get("/products", authenticateToken, productController.getProducts);
 
-productRoute.get("/products", productController.getProducts);
+// productRoute.get("/products", productController.getProducts);
 
 productRoute.get("/products/newest", productController.getProductsNewest);
 
