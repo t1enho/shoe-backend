@@ -18,5 +18,9 @@ orderRoute.get(
 );
 
 orderRoute.get("/orders/:orderId", authenticateToken, orderController.getOrder);
-
+orderRoute.put(
+  "/orders/:orderId",
+  authenticateToken,
+  orderController.updateOrder
+);
 export default orderRoute;

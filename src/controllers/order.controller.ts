@@ -278,9 +278,28 @@ const getOrder: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const updateOrder: RequestHandler = async (req, res, next) => {
+  // @ts-ignore
+  const uid = req.user.id;
+  const orderId = req.params.orderId;
+  const { status } = req.body;
+  console.log(orderId);
+  try {
+    const orderExists = await OrderModel.findByPk(orderId);
+    if (orderExists) await orderExists.update({ status: status });
+    console.log(orderExists?.toJSON());
+    return createSuccess(res, {
+      data: orderExists?.toJSON(),
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const orderController = {
   createOrder,
   getOrdersHistory,
   createOrderZaloPay,
   getOrder,
+  updateOrder,
 };

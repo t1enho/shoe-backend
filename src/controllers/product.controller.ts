@@ -14,7 +14,7 @@ const createProduct: RequestHandler = async (req, res, next) => {
         message: "Danh mục không tồn tại",
       });
     }
-
+    const nameNormalized = unidecode(name);
     const newProduct = await ProductModel.create({
       name,
       material,
@@ -23,6 +23,7 @@ const createProduct: RequestHandler = async (req, res, next) => {
       description,
       status: "FOR_SALE",
       categoryId,
+      nameNormalized: nameNormalized,
     });
 
     return createSuccess(res, {
@@ -35,10 +36,8 @@ const createProduct: RequestHandler = async (req, res, next) => {
 
 const updateProduct: RequestHandler = async (req, res, next) => {
   const { status } = req.body;
-  console.log("PRODUCT_STATUS ", status);
   const { id } = req.params;
 
-  console.log("PRODUCT_ID ", id);
   try {
     const productExists = await ProductModel.findByPk(id);
     if (!productExists) {
@@ -69,6 +68,7 @@ const getProducts: RequestHandler = async (req, res, next) => {
   const userExists = await UserModel.findByPk(86);
 
   if (userExists?.toJSON().role === "admin") {
+    console.log("vo");
     try {
       const products = await ProductModel.findAll({
         attributes: { exclude: ["categoryId"] },
@@ -87,12 +87,12 @@ const getProducts: RequestHandler = async (req, res, next) => {
 
       const sorted = (sort ? sort : "DESC") as string;
       const products = await ProductModel.findAll({
-        // order: [["createdAt", "DESC"]],
+        order: [["createdAt", sorted]],
         attributes: { exclude: ["categoryId"] },
         include: CategoryModel,
         where: {
           // status: "FOR_SALE",
-          name: {
+          nameNormalized: {
             [Op.like]: `%${normalizedSearchQuery.trim()}%`,
           },
         },

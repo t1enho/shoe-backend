@@ -12,6 +12,10 @@ const ProductModel = connection.define(TABLE_NAMES.PRODUCTS, {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  nameNormalized: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   material: {
     type: DataTypes.STRING,
     allowNull: true,
