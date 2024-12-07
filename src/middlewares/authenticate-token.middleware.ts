@@ -10,10 +10,10 @@ export const authenticateToken: RequestHandler<unknown> = async (
 ) => {
   try {
     const authHeader = req.headers.authorization;
-    // const accessToken = authHeader && authHeader.split(" ")[1];
+    const accessToken = authHeader && authHeader.split(" ")[1];
 
-    const accessToken =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ODEsInJvbGUiOiJhZG1pbiIsImlhdCI6MTczMzIzMDQ5NCwiZXhwIjoxNzY0NzY2NDk0fQ.J8Q7zHiXG-b0lK6rX_-6yFy_4kK8IFhOF0SOEEmp23Q";
+    // const accessToken =
+    //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ODEsInJvbGUiOiJhZG1pbiIsImlhdCI6MTczMzIzMDQ5NCwiZXhwIjoxNzY0NzY2NDk0fQ.J8Q7zHiXG-b0lK6rX_-6yFy_4kK8IFhOF0SOEEmp23Q";
 
     if (!accessToken) {
       throw createHttpError(401, "Token không hợp lệ");
