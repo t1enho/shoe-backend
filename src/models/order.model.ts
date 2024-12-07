@@ -20,6 +20,18 @@ const OrderModel = connection.define(TABLE_NAMES.ORDERS, {
     type: DataTypes.TEXT("long"),
     allowNull: true,
   },
+  paymentStatus: {
+    type: DataTypes.ENUM({
+      values: ["PAID", "UNPAID"],
+    }),
+    allowNull: true,
+  },
+  paymentType: {
+    type: DataTypes.ENUM({
+      values: ["ZALOPAY", "MOMO", "DEFAULT"],
+    }),
+    allowNull: true,
+  },
 });
 
 export default OrderModel;

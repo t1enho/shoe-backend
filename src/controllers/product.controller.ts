@@ -1,5 +1,7 @@
 import { RequestHandler } from "express";
-import { CategoryModel, ProductModel } from "~/models";
+import { Op } from "sequelize";
+import unidecode from "unidecode";
+import { CategoryModel, ProductModel, UserModel } from "~/models";
 import { createError, createSuccess } from "~/utils";
 
 const createProduct: RequestHandler = async (req, res, next) => {
@@ -59,16 +61,48 @@ const updateProduct: RequestHandler = async (req, res, next) => {
 };
 
 const getProducts: RequestHandler = async (req, res, next) => {
-  try {
-    const products = await ProductModel.findAll({
-      attributes: { exclude: ["categoryId"] },
-      include: CategoryModel,
-    });
-    return createSuccess(res, {
-      data: products,
-    });
-  } catch (error) {
-    next(error);
+  //@ts-ignore
+  const uid = req.user.id;
+  //@ts-ignore
+  const { sort, search } = req.query;
+
+  const userExists = await UserModel.findByPk(86);
+
+  if (userExists?.toJSON().role === "admin") {
+    try {
+      const products = await ProductModel.findAll({
+        attributes: { exclude: ["categoryId"] },
+        include: CategoryModel,
+      });
+      return createSuccess(res, {
+        data: products,
+      });
+    } catch (error) {
+      next(error);
+    }
+  } else {
+    try {
+      const normalizedSearchQuery = unidecode(search as string);
+      console.log(normalizedSearchQuery);
+
+      const sorted = (sort ? sort : "DESC") as string;
+      const products = await ProductModel.findAll({
+        // order: [["createdAt", "DESC"]],
+        attributes: { exclude: ["categoryId"] },
+        include: CategoryModel,
+        where: {
+          // status: "FOR_SALE",
+          name: {
+            [Op.like]: `%${normalizedSearchQuery.trim()}%`,
+          },
+        },
+      });
+      return createSuccess(res, {
+        data: products,
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 };
 
@@ -99,6 +133,9 @@ const getProductsNewest: RequestHandler = async (req, res, next) => {
       order: [["createdAt", "DESC"]], // Sort by the newest first
       attributes: { exclude: ["categoryId"] },
       include: CategoryModel,
+      where: {
+        status: "FOR_SALE",
+      },
       // limit: 10,
     });
 

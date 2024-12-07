@@ -1,7 +1,11 @@
 import bodyParser from "body-parser";
 import * as dotenv from "dotenv";
 import express from "express";
+import * as admin from "firebase-admin";
 import routes from "~/routes";
+const firebasekey = require("./firebase-key.json");
+
+admin.initializeApp({ credential: admin.credential.cert(firebasekey) });
 
 dotenv.config();
 

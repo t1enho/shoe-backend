@@ -48,6 +48,10 @@ const UserModel = connection.define(TABLE_NAMES.USERS, {
     type: DataTypes.ENUM({ values: ["user", "admin"] }),
     allowNull: true,
   },
+  fcmToken: {
+    type: DataTypes.TEXT("long"),
+    allowNull: true,
+  },
 });
 
 export default UserModel;

@@ -1,10 +1,12 @@
 import CategoryModel from "./category.model";
+import NotificationModel from "./notification.model";
 import OrderItemModel from "./order-item.model";
 import OrderModel from "./order.model";
 import ProductModel from "./product.model";
 import UserModel from "./user.model";
 
 export { default as CategoryModel } from "./category.model";
+export { default as NotificationModel } from "./notification.model";
 export { default as OrderItemModel } from "./order-item.model";
 export { default as OrderModel } from "./order.model";
 export { default as ProductModel } from "./product.model";
@@ -15,13 +17,13 @@ ProductModel.belongsTo(CategoryModel, {
 });
 
 OrderModel.belongsTo(UserModel, {
-  foreignKey: "customerId",
-  as: "customer",
+  foreignKey: "uid",
+  // as: "customer",
 });
-OrderModel.belongsTo(UserModel, {
-  foreignKey: "deliveryId",
-  as: "delivery",
-});
+// OrderModel.belongsTo(UserModel, {
+//   foreignKey: "deliveryId",
+//   as: "delivery",
+// });
 
 OrderModel.hasMany(OrderItemModel, {
   foreignKey: "orderId",
@@ -33,6 +35,20 @@ OrderItemModel.belongsTo(OrderModel, {
 OrderItemModel.belongsTo(ProductModel, {
   foreignKey: "productId",
   // as: 'product'
+});
+
+// UserModel.hasMany(NotificationModel, {
+//   foreignKey: "uid",
+// });
+NotificationModel.belongsTo(UserModel, {
+  foreignKey: "uid",
+});
+
+// OrderModel.hasMany(NotificationModel, {
+//   foreignKey: "orderId",
+// });
+NotificationModel.belongsTo(OrderModel, {
+  foreignKey: "orderId",
 });
 
 OrderModel.sync({
@@ -52,5 +68,9 @@ UserModel.sync({
 });
 
 CategoryModel.sync({
+  // keep
+});
+
+NotificationModel.sync({
   // keep
 });

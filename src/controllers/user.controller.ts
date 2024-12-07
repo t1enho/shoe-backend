@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { OAuth2Client } from "google-auth-library";
 import _ from "lodash";
 import { UserModel } from "~/models";
+import { fcmService } from "~/services";
 import {
   comparePassword,
   createError,
@@ -20,6 +21,7 @@ const signUp: RequestHandler = async (req, res, next) => {
     method,
     picture,
     email,
+    fcmToken,
   } = req.body;
 
   try {
@@ -57,6 +59,7 @@ const signUp: RequestHandler = async (req, res, next) => {
       picture,
       email,
       role: "user",
+      fcmToken: fcmToken,
     };
 
     const newUser = await UserModel.create({
@@ -64,6 +67,8 @@ const signUp: RequestHandler = async (req, res, next) => {
     });
 
     const userResult = _.omit(newUser.toJSON(), ["password"]);
+
+    await fcmService.sendSignupNotification(fcmToken);
 
     return createSuccess(res, {
       data: userResult,
@@ -74,7 +79,7 @@ const signUp: RequestHandler = async (req, res, next) => {
 };
 
 const login: RequestHandler = async (req, res, next) => {
-  const { username, password } = req.body;
+  const { username, password, fcmToken } = req.body;
 
   try {
     const userExists = await UserModel.findOne({
@@ -100,6 +105,10 @@ const login: RequestHandler = async (req, res, next) => {
 
     const accessToken = generateToken(userObj);
     const userResult = _.omit(userObj, ["password"]);
+    userExists.update({
+      fcmToken,
+    });
+    userExists.save();
     return createSuccess(res, {
       data: { ...userResult, accessToken },
     });
@@ -108,12 +117,83 @@ const login: RequestHandler = async (req, res, next) => {
   }
 };
 
-const getUserInfo = () => {};
+const getUserInfo: RequestHandler = async (req, res, next) => {
+  // @ts-ignore
+  const uid = req.user.id;
+  try {
+    const userExists = await UserModel.findOne({
+      where: {
+        id: uid,
+      },
+    });
 
-const updateUserInfo = () => {};
+    if (!userExists) {
+      return createError(res, {
+        message: "Người dùng không tồn tại",
+      });
+    }
+
+    return createSuccess(res, {
+      data: userExists.toJSON(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateUserInfo: RequestHandler = async (req, res, next) => {
+  const { fullname, username, picture, phoneNumber, dateOfBirth } = req.body;
+
+  // @ts-ignore
+  const uid = req.user.id;
+  try {
+    const userExists = await UserModel.findOne({
+      where: {
+        id: uid,
+      },
+    });
+
+    if (!userExists) {
+      return createError(res, {
+        message: "Người dùng không tồn tại",
+      });
+    }
+
+    if (userExists.toJSON().username !== username) {
+      const usernameExists = await UserModel.findOne({
+        where: {
+          username,
+        },
+      });
+
+      if (usernameExists) {
+        return createError(res, {
+          message: "Tên người dùng đã được sử dụng",
+        });
+      }
+    } else {
+      userExists.update({
+        fullname,
+        username,
+        picture,
+        phoneNumber,
+        dateOfBirth,
+      });
+
+      userExists.save();
+
+      return createSuccess(res, {
+        data: userExists.toJSON(),
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 
 const loginWithGoogle: RequestHandler = async (req, res, next) => {
-  const { idToken } = req.body;
+  const { idToken, fcmToken } = req.body;
   const client = new OAuth2Client();
 
   let accessToken;
@@ -144,6 +224,7 @@ const loginWithGoogle: RequestHandler = async (req, res, next) => {
         picture: payload?.picture,
         fullname: payload?.name,
         role: "user",
+        fcmToken,
       };
 
       const newUser = await UserModel.create(info);
@@ -163,10 +244,52 @@ const loginWithGoogle: RequestHandler = async (req, res, next) => {
   }
 };
 
+const updatePassword: RequestHandler = async (req, res, next) => {
+  const { oldPassword, newPassword } = req.body;
+
+  // @ts-ignore
+  const uid = req.user.id;
+
+  try {
+    const userExists = await UserModel.findOne({
+      where: {
+        id: uid,
+      },
+    });
+    if (!userExists) {
+      return createError(res, {
+        message: "Người dùng không tồn tại",
+      });
+    }
+
+    const passwordMatch = await comparePassword(
+      oldPassword,
+      userExists?.toJSON().password
+    );
+
+    if (!passwordMatch) {
+      return createError(res, {
+        message: "Mật khẩu không đúng",
+      });
+    }
+
+    const newHashedPassword = await hashPassword(newPassword);
+    userExists.update({ password: newHashedPassword });
+    userExists.save();
+
+    return createSuccess(res, {
+      message: "Cập nhật thành công",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const userController = {
   signUp,
   login,
   getUserInfo,
   updateUserInfo,
   loginWithGoogle,
+  updatePassword,
 };
