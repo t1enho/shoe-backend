@@ -4,6 +4,7 @@ import notificationRoute from "./notification.route";
 import orderRoute from "./order.route";
 import productRoute from "./product.route";
 import userRoute from "./user.route";
+import voucherRoute from "./voucher.route";
 
 const routes = Router();
 
@@ -19,5 +20,7 @@ routes.use(productRoute);
 routes.use(orderRoute);
 
 routes.use(notificationRoute);
+
+routes.use(voucherRoute);
 
 export default routes;

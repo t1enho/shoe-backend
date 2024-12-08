@@ -32,6 +32,14 @@ const OrderModel = connection.define(TABLE_NAMES.ORDERS, {
     }),
     allowNull: true,
   },
+  discount: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  address: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 });
 
 export default OrderModel;

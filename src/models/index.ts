@@ -4,6 +4,7 @@ import OrderItemModel from "./order-item.model";
 import OrderModel from "./order.model";
 import ProductModel from "./product.model";
 import UserModel from "./user.model";
+import VoucherModel from "./voucher.model";
 
 export { default as CategoryModel } from "./category.model";
 export { default as NotificationModel } from "./notification.model";
@@ -11,6 +12,7 @@ export { default as OrderItemModel } from "./order-item.model";
 export { default as OrderModel } from "./order.model";
 export { default as ProductModel } from "./product.model";
 export { default as UserModel } from "./user.model";
+export { default as VoucherModel } from "./voucher.model";
 
 ProductModel.belongsTo(CategoryModel, {
   foreignKey: "categoryId",
@@ -24,6 +26,10 @@ OrderModel.belongsTo(UserModel, {
 //   foreignKey: "deliveryId",
 //   as: "delivery",
 // });
+
+OrderModel.belongsTo(VoucherModel, {
+  foreignKey: "code",
+});
 
 OrderModel.hasMany(OrderItemModel, {
   foreignKey: "orderId",
@@ -72,5 +78,9 @@ CategoryModel.sync({
 });
 
 NotificationModel.sync({
+  // keep
+});
+
+VoucherModel.sync({
   // keep
 });

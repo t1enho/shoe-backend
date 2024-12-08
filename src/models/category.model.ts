@@ -16,6 +16,10 @@ const CategoryModel = connection.define(TABLE_NAMES.CATEGORIES, {
     type: DataTypes.TEXT("long"),
     allowNull: true,
   },
+  image: {
+    type: DataTypes.TEXT("long"),
+    allowNull: true,
+  },
 });
 
 export default CategoryModel;

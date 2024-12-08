@@ -65,10 +65,9 @@ const getProducts: RequestHandler = async (req, res, next) => {
   //@ts-ignore
   const { sort, search } = req.query;
 
-  const userExists = await UserModel.findByPk(86);
+  const userExists = await UserModel.findByPk(uid);
 
   if (userExists?.toJSON().role === "admin") {
-    console.log("vo");
     try {
       const products = await ProductModel.findAll({
         attributes: { exclude: ["categoryId"] },
@@ -86,12 +85,17 @@ const getProducts: RequestHandler = async (req, res, next) => {
       console.log(normalizedSearchQuery);
 
       const sorted = (sort ? sort : "DESC") as string;
+      let firstOrder: any;
+      if (sort === "ASC") firstOrder = ["name", "ASC"];
+      else if (sort === "DESC") firstOrder = ["name", "DESC"];
+      else if (sort === "PRICE_ASC") firstOrder = ["price", "ASC"];
+      else if (sort === "PRICE_DESC") firstOrder = ["price", "DESC"];
       const products = await ProductModel.findAll({
-        order: [["createdAt", sorted]],
+        order: [firstOrder],
         attributes: { exclude: ["categoryId"] },
         include: CategoryModel,
         where: {
-          // status: "FOR_SALE",
+          status: "FOR_SALE",
           nameNormalized: {
             [Op.like]: `%${normalizedSearchQuery.trim()}%`,
           },
@@ -147,10 +151,33 @@ const getProductsNewest: RequestHandler = async (req, res, next) => {
   }
 };
 
+const getProductsByCategory: RequestHandler = async (req, res, next) => {
+  try {
+    const { categoryId } = req.params;
+
+    if (!categoryId) {
+      return createError(res, {
+        message: "Danh mục là bắt buộc",
+      });
+    }
+
+    const products = await ProductModel.findAll({
+      where: { categoryId },
+
+      order: [["createdAt", "DESC"]],
+    });
+
+    return createSuccess(res, {
+      data: products,
+    });
+  } catch (error) {}
+};
+
 export const productController = {
   createProduct,
   updateProduct,
   getProducts,
   getProduct,
   getProductsNewest,
+  getProductsByCategory,
 };

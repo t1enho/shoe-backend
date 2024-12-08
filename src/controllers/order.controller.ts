@@ -8,9 +8,15 @@ import {
   OrderModel,
   ProductModel,
   UserModel,
+  VoucherModel,
 } from "~/models";
 import { fcmService } from "~/services";
-import { createError, createSuccess, formatMoney } from "~/utils";
+import {
+  calculateDiscount,
+  createError,
+  createSuccess,
+  formatMoney,
+} from "~/utils";
 
 const CryptoJS = require("crypto-js");
 const qs = require("qs");
@@ -32,12 +38,14 @@ const examp: RequestHandler = async (req, res, next) => {
 
 const createOrder: RequestHandler = async (req, res, next) => {
   // @ts-ignore
-  const { paymentType } = req.body;
+  const { paymentType, code, address } = req.body;
 
   const items = JSON.parse(req.body.items);
 
   // @ts-ignore
   const uid = req.user.id;
+
+  let discount = 0;
 
   try {
     const productIds = items.map((item: any) => item.id);
@@ -73,12 +81,30 @@ const createOrder: RequestHandler = async (req, res, next) => {
       return acc + currentValue.price * currentValue.quantity;
     }, 0);
 
+    if (code) {
+      const voucher = (await VoucherModel.findOne({
+        where: {
+          code,
+        },
+      })) as any;
+
+      if (voucher) {
+        discount = calculateDiscount(totalPrice, voucher);
+        voucher.update({
+          timesUsed: voucher.timesUsed + 1,
+        });
+      }
+    }
+
     const newOrder = (await OrderModel.create({
       uid,
       totalPrice: totalPrice,
       status: "WAITING",
       paymentType: paymentType,
       paymentStatus: paymentType == "ZALOPAY" ? "PAID" : "UNPAID",
+      discount: discount,
+      code: code,
+      address,
     })) as any;
 
     // await Promise.all(
@@ -145,7 +171,7 @@ const createOrder: RequestHandler = async (req, res, next) => {
     const user = await UserModel.findOne({ where: { id: uid } });
 
     const fcmToken = user?.toJSON().fcmToken;
-    console.log(fcmToken);
+
     await fcmService.sendPushNotify({
       notification: {
         title: "Thông báo đơn hàng",
@@ -156,7 +182,9 @@ const createOrder: RequestHandler = async (req, res, next) => {
 
     try {
       await NotificationModel.create({
-        title: `Đơn hàng ${formatMoney(totalPrice)} tại Wahoo`,
+        title: `Đơn hàng với số tiền ${formatMoney(
+          totalPrice
+        )} tại Wahoo đã được tạo`,
         description: `Cảm ơn bạn đã mua hàng tại Wahoo`,
         type: "ORDER",
         orderId: newOrder.id,
@@ -181,15 +209,18 @@ const getOrdersHistory: RequestHandler = async (req, res, next) => {
   try {
     // @ts-ignore
     const uid = req.user.id;
+    const user = (await UserModel.findByPk(uid)) as any;
+    let whereClause: any = {};
+    if (user.role === "user") {
+      whereClause = { uid };
+    }
 
-    let whereClause: any = { uid };
-
-    if (date) {
+    if (date !== undefined) {
       const startOfDay = moment(date, "DD/MM/YYYY").startOf("day").toDate();
       const endOfDay = moment(date, "DD/MM/YYYY").endOf("day").toDate();
 
-      console.log("start", startOfDay);
-      console.log("end", endOfDay);
+      // console.log("start", startOfDay);
+      // console.log("end", endOfDay);
 
       whereClause.createdAt = {
         [Op.gte]: startOfDay,
@@ -207,6 +238,9 @@ const getOrdersHistory: RequestHandler = async (req, res, next) => {
               model: ProductModel,
             },
           ],
+        },
+        {
+          model: UserModel,
         },
       ],
     });

@@ -5,4 +5,5 @@ export const TABLE_NAMES = {
   ORDERS: "orders",
   ORDER_ITEMS: "orderItems",
   NOTIFICATIONS: "notifications",
+  VOUCERS: "vouchers",
 };

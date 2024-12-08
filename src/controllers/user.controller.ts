@@ -141,6 +141,73 @@ const getUserInfo: RequestHandler = async (req, res, next) => {
   }
 };
 
+const updateUser: RequestHandler = async (req, res, next) => {
+  const { fullname, username, picture, phoneNumber, dateOfBirth } = req.body;
+
+  // @ts-ignore
+  const { id } = req.params;
+  console.log("vo1");
+  try {
+    const userExists = await UserModel.findOne({
+      where: {
+        id: id,
+      },
+    });
+    console.log("vo21");
+
+    if (!userExists) {
+      return createError(res, {
+        message: "Người dùng không tồn tại",
+      });
+    }
+    console.log("vo13");
+    if (username && userExists.toJSON().username !== username) {
+      const usernameExists = await UserModel.findOne({
+        where: {
+          username,
+        },
+      });
+      console.log("vo14");
+      if (usernameExists) {
+        return createError(res, {
+          message: "Tên người dùng đã được sử dụng",
+        });
+      } else {
+        userExists.update({
+          fullname,
+          username,
+          picture,
+          phoneNumber,
+          dateOfBirth,
+        });
+
+        userExists.save();
+
+        return createSuccess(res, {
+          data: userExists.toJSON(),
+        });
+      }
+    } else {
+      userExists.update({
+        fullname,
+        username,
+        picture,
+        phoneNumber,
+        dateOfBirth,
+      });
+
+      userExists.save();
+
+      return createSuccess(res, {
+        data: userExists.toJSON(),
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
 const updateUserInfo: RequestHandler = async (req, res, next) => {
   const { fullname, username, picture, phoneNumber, dateOfBirth } = req.body;
 
@@ -285,6 +352,20 @@ const updatePassword: RequestHandler = async (req, res, next) => {
   }
 };
 
+const getUsers: RequestHandler = async (req, res, next) => {
+  try {
+    const users = await UserModel.findAll({
+      where: {
+        role: "user",
+      },
+      attributes: { exclude: ["password", "fcmToken"] },
+    });
+    return createSuccess(res, {
+      data: users,
+    });
+  } catch (error) {}
+};
+
 export const userController = {
   signUp,
   login,
@@ -292,4 +373,6 @@ export const userController = {
   updateUserInfo,
   loginWithGoogle,
   updatePassword,
+  getUsers,
+  updateUser,
 };

@@ -3,11 +3,12 @@ import { CategoryModel } from "~/models";
 import { createError, createSuccess } from "~/utils";
 
 const createCategory: RequestHandler = async (req, res, next) => {
-  const { name, description } = req.body;
+  const { name, description, image } = req.body;
   try {
     const newCategory = await CategoryModel.create({
       name,
       description,
+      image,
     });
 
     return createSuccess(res, {
@@ -19,7 +20,7 @@ const createCategory: RequestHandler = async (req, res, next) => {
 };
 
 const updateCategory: RequestHandler = async (req, res, next) => {
-  const { name, description } = req.body;
+  const { name, description, image } = req.body;
   const { id } = req.params;
 
   try {
@@ -33,6 +34,7 @@ const updateCategory: RequestHandler = async (req, res, next) => {
     const newUpdate = {
       name,
       description,
+      image,
     };
 
     categoryExists.update({ ...newUpdate });
