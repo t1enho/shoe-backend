@@ -95,7 +95,7 @@ const getProducts: RequestHandler = async (req, res, next) => {
         attributes: { exclude: ["categoryId"] },
         include: CategoryModel,
         where: {
-          status: "FOR_SALE",
+          // status: "FOR_SALE",
           nameNormalized: {
             [Op.like]: `%${normalizedSearchQuery.trim()}%`,
           },
@@ -138,7 +138,7 @@ const getProductsNewest: RequestHandler = async (req, res, next) => {
       attributes: { exclude: ["categoryId"] },
       include: CategoryModel,
       where: {
-        status: "FOR_SALE",
+        // status: "FOR_SALE",
       },
       // limit: 10,
     });

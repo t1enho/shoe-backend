@@ -23,4 +23,8 @@ orderRoute.put(
   authenticateToken,
   orderController.updateOrder
 );
+
+orderRoute.get("/yearly-revenue", orderController.getYearlyRevenue);
+
+orderRoute.get("/revenue", orderController.getTotalRevenueInRange);
 export default orderRoute;

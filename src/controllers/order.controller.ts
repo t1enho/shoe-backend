@@ -1,7 +1,7 @@
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
 import moment from "moment";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import {
   NotificationModel,
   OrderItemModel,
@@ -96,16 +96,22 @@ const createOrder: RequestHandler = async (req, res, next) => {
       }
     }
 
-    const newOrder = (await OrderModel.create({
+    let payload = {
       uid,
       totalPrice: totalPrice,
       status: "WAITING",
       paymentType: paymentType,
       paymentStatus: paymentType == "ZALOPAY" ? "PAID" : "UNPAID",
       discount: discount,
-      code: code,
+      // code: code,
       address,
-    })) as any;
+    } as any;
+
+    if (code) {
+      payload.code = code;
+    }
+
+    const newOrder = (await OrderModel.create(payload)) as any;
 
     // await Promise.all(
     //   combineProducts.map(async (item: any) => {
@@ -330,10 +336,88 @@ export const updateOrder: RequestHandler = async (req, res, next) => {
   }
 };
 
+const getYearlyRevenue: RequestHandler = async (req, res, next) => {
+  try {
+    const currentYear = new Date().getFullYear();
+
+    const orders = await OrderModel.findAll({
+      attributes: [
+        [Sequelize.fn("MONTH", Sequelize.col("createdAt")), "month"],
+        [
+          Sequelize.fn("SUM", Sequelize.literal("totalPrice - discount")),
+          "totalRevenue",
+        ],
+      ],
+      where: {
+        createdAt: {
+          [Op.between]: [
+            new Date(`${currentYear}-01-01 00:00:00`),
+            new Date(`${currentYear}-12-31 23:59:59`),
+          ],
+        },
+      },
+      group: [Sequelize.fn("MONTH", Sequelize.col("createdAt"))],
+      order: [[Sequelize.fn("MONTH", Sequelize.col("createdAt")), "ASC"]],
+    });
+
+    const monthlyRevenue = Array(12).fill(0);
+    orders.forEach((order) => {
+      const month = order.dataValues.month - 1;
+      const totalRevenue = parseFloat(order.dataValues.totalRevenue) || 0;
+      monthlyRevenue[month] = totalRevenue;
+    });
+
+    return createSuccess(res, {
+      data: {
+        year: currentYear,
+        revenue: monthlyRevenue,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching yearly revenue:", error);
+    next(error);
+  }
+};
+
+const getTotalRevenueInRange: RequestHandler = async (req, res, next) => {
+  const { startDate, endDate } = req.query as any;
+
+  const formattedStartDate = moment(startDate, "DD/MM/YYYY").startOf("day");
+  const formattedEndDate = moment(endDate, "DD/MM/YYYY").endOf("day");
+
+  if (formattedStartDate.isAfter(formattedEndDate)) {
+    return createError(res, {
+      message: "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc",
+    });
+  }
+
+  try {
+    const result = (await OrderModel.findOne({
+      attributes: [
+        [Sequelize.literal("SUM(totalPrice - discount)"), "totalRevenue"],
+      ],
+      where: {
+        createdAt: {
+          [Op.gte]: formattedStartDate.toDate(),
+          [Op.lte]: formattedEndDate.toDate(),
+        },
+      },
+    })) as any;
+
+    return createSuccess(res, {
+      data: result,
+    });
+  } catch (error) {
+    console.error("Lỗi khi tính tổng doanh thu:", error);
+  }
+};
+
 export const orderController = {
   createOrder,
   getOrdersHistory,
   createOrderZaloPay,
   getOrder,
   updateOrder,
+  getYearlyRevenue,
+  getTotalRevenueInRange,
 };
