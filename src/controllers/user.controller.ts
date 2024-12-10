@@ -146,28 +146,27 @@ const updateUser: RequestHandler = async (req, res, next) => {
 
   // @ts-ignore
   const { id } = req.params;
-  console.log("vo1");
+
   try {
     const userExists = await UserModel.findOne({
       where: {
         id: id,
       },
     });
-    console.log("vo21");
 
     if (!userExists) {
       return createError(res, {
         message: "Người dùng không tồn tại",
       });
     }
-    console.log("vo13");
+
     if (username && userExists.toJSON().username !== username) {
       const usernameExists = await UserModel.findOne({
         where: {
           username,
         },
       });
-      console.log("vo14");
+
       if (usernameExists) {
         return createError(res, {
           message: "Tên người dùng đã được sử dụng",

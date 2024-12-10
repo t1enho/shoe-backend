@@ -189,7 +189,7 @@ const createOrder: RequestHandler = async (req, res, next) => {
     try {
       await NotificationModel.create({
         title: `Đơn hàng với số tiền ${formatMoney(
-          totalPrice
+          totalPrice - discount
         )} tại Wahoo đã được tạo`,
         description: `Cảm ơn bạn đã mua hàng tại Wahoo`,
         type: "ORDER",
