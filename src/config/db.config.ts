@@ -7,6 +7,12 @@ export const connection = new Sequelize({
   password: "",
   database: "shoe",
   logging: false,
+  timezone: "+07:00",
+  dialectOptions: {
+    timezone: "local",
+    dateStrings: true,
+    typeCast: true,
+  },
 });
 
 connection
