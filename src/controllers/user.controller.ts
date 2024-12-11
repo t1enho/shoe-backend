@@ -56,7 +56,9 @@ const signUp: RequestHandler = async (req, res, next) => {
       phoneNumber,
       password: hashedPassword,
       method: "username",
-      picture,
+      picture:
+        picture ??
+        "https://w7.pngwing.com/pngs/205/731/png-transparent-default-avatar-thumbnail.png",
       email,
       role: "user",
       fcmToken: fcmToken,
@@ -80,7 +82,6 @@ const signUp: RequestHandler = async (req, res, next) => {
 
 const login: RequestHandler = async (req, res, next) => {
   const { username, password, fcmToken } = req.body;
-
   try {
     const userExists = await UserModel.findOne({
       where: {
