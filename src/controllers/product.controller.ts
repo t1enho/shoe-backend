@@ -5,7 +5,8 @@ import { CategoryModel, ProductModel, UserModel } from "~/models";
 import { createError, createSuccess } from "~/utils";
 
 const createProduct: RequestHandler = async (req, res, next) => {
-  const { name, material, size, price, description, categoryId } = req.body;
+  const { name, material, size, price, description, categoryId, imageURL } =
+    req.body;
 
   try {
     const categoryExists = await CategoryModel.findByPk(categoryId);
@@ -24,6 +25,7 @@ const createProduct: RequestHandler = async (req, res, next) => {
       status: "FOR_SALE",
       categoryId,
       nameNormalized: nameNormalized,
+      imageURL,
     });
 
     return createSuccess(res, {
